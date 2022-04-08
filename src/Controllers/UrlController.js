@@ -1,8 +1,7 @@
-const Models = require("../Models/UrlModel")
+const UrlModel = require("../Models/UrlModel");
 const mongoose = require('mongoose');
 const ValidURL = require('valid-url')
-const shortid = require('shortid');
-const UrlModel = require("../Models/UrlModel");
+const shortid = require('shortid')
 const redis= require('redis')
 const {promisify}= require('util')
 
@@ -43,7 +42,7 @@ const ShortingUrl = async function (req, res) {
             return res.status(400).send({ status: false, msg: "Please enter Long url" })
         }
 
-        const longUrlData= await Models.findOne({ longUrl: longUrl })
+        const longUrlData= await UrlModel.findOne({ longUrl: longUrl })
 
         if (isValid(longUrlData)) {
             return res.status(200).send({ status: true, data: longUrlData })
@@ -52,14 +51,15 @@ const ShortingUrl = async function (req, res) {
 
 
             const shortUrl = baseurl + '/' + urlCode
-            const saveShortUrl= await SET_ASYNC('shortUrl',JSON.stringify(shortUrl))
-            const savelongUrl= await SET_ASYNC('longUrl',JSON.stringify(longUrl))
-            const saveurlCode= await SET_ASYNC('urlCode',JSON.stringify(urlCode))
+   
             
         
-            const result = await Models.create({ longUrl: savelongUrl, shortUrl: saveShortUrl, urlCode: saveurlCode })
+            const result = await UrlModel.create({ longUrl: longUrl, shortUrl: shortUrl, urlCode: urlCode })
            
-
+            //await SET_ASYNC(urlCode.toLowerCase(), longUrl)
+            await SET_ASYNC('longUrl',JSON.stringify(longUrl))
+            await SET_ASYNC('shortUrl',JSON.stringify(shortUrl))
+            await SET_ASYNC('urlCode',JSON.stringify(urlCode))
            return res.status(201).send({ status: true, msg: "Data created sucessfully", data: result })
         }
 
@@ -82,6 +82,9 @@ const getingdata = async function (req, res) {
         } else {
             // else return a not found 404 status
           let data= await UrlModel.findOne({urlCode:urlData})
+          if(!data){
+              res.status(404).send({status:false,msg:"invalid request"})
+          }
            await SET_ASYNC('${req.params.urlCode}',JSON.stringify(data.longUrl))
           res.status(201).redirect(data.longUrl)
         }
