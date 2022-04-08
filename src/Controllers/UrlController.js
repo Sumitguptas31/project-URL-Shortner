@@ -1,6 +1,5 @@
 const UrlModel = require("../Models/UrlModel");
-const mongoose = require('mongoose');
-const ValidURL = require('valid-url')
+const mongoose = require('mongoose')
 const shortid = require('shortid')
 const redis= require('redis')
 const {promisify}= require('util')
@@ -41,11 +40,16 @@ const ShortingUrl = async function (req, res) {
         if (!isValid(longUrl)) {
             return res.status(400).send({ status: false, msg: "Please enter Long url" })
         }
+        if (!/^(http(s)?:\/\/)[\w.-]+(?:\.[\w\.-]+)+[\w\-\._~:/?#[\]@!\$&'\(\)\*\+,;=.]+$/.test(longUrl.trim())) {
+
+            return res.status(400).send({ status: false, message: "please provide valid URL" })
+         }
+      
 
         const longUrlData= await UrlModel.findOne({ longUrl: longUrl })
 
         if (isValid(longUrlData)) {
-            return res.status(200).send({ status: true, data: longUrlData })
+            return res.status(201).send({ status: true, data: longUrlData })
         }
         else {
 
